@@ -1,2 +1,75 @@
-# pt-fluentd
-Fluentd integration with Papertrail
+# Fluent::Plugin::Papertrail
+
+Welcome to the Papertrail Fluentd plugin!
+
+## Installation
+
+Install this gem when setting up fluentd:
+
+```ruby
+gem install fluent-plugin-papertrail
+```
+
+## Usage
+
+To configure this in fluentd
+```xml
+<match whatever.*>
+  type papertrail
+  papertrail_host <your papertrail hostname>
+  papertrail_port <your papertrail port>
+</match>
+```
+
+Use a record transform plugin to populate within the record the following fields:
+```
+    message   The log
+    program   The program/tag
+    severity  A valid syslog severity label
+    facility  A valid syslog facility label
+    hostname  The source hostname for papertrail logging
+```
+The following snippet sets up the records for Kubernetes and assumes you are using
+the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter) plugin which populates the record with usefule metadata :
+
+```yaml
+<filter kubernetes.**>
+  type kubernetes_metadata
+</filter>
+
+<filter kubernetes.**>
+  type record_transformer
+  enable_ruby true
+  <record>
+    hostname ${record["kubernetes"]["namespace_name"]}-${record["kubernetes"]["pod_name"]}
+    program ${record["kubernetes"]["container_name"]}
+    severity info
+    facility local0
+    message ${record['log']}
+  </record>
+</filter>
+
+```
+## Development
+
+We use Make and Docker. We have a [Dockerfile](Dockerfile.scratch) where we build a scratch image that contains all the dependencies.
+
+### Install
+`make install`
+
+### Test
+`make test`
+
+### Release in [RubyGems](RubyGems.org)
+To release a new version, update the version number in the [GemSpec](fluent-plugin-papertrail.gemspec) and then, run
+
+`make release`
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/solarwindsfluent-plugin-papertrail.
+
+
+## License
+
+The gem is available as open source under the terms of the [Apache](LICENSE).
