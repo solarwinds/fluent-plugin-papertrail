@@ -52,7 +52,9 @@ the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/flue
 ```
 ## Development
 
-We use Make and Docker. We have a [Dockerfile](Dockerfile.scratch) where we build a scratch image that contains all the dependencies.
+We use git Make and Docker. 
+We have a [Dockerfile](Dockerfile.scratch) where we build a scratch image that contains all the dependencies.
+We have a [Makefile](Makefile) to wrap the common functions and make life easier.
 
 ### Install
 `make install`
@@ -67,7 +69,7 @@ To release a new version, update the version number in the [GemSpec](fluent-plug
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/solarwindsfluent-plugin-papertrail.
+Bug reports and pull requests are welcome on GitHub at https://github.com/solarwinds/fluent-plugin-papertrail.
 
 
 ## License
