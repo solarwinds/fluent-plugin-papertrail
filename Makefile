@@ -22,6 +22,9 @@ install: build-image-scratch
 test: install
 	docker run ${SCRATCH_CONTAINER_DOCKER_OPTS} --name ${SCRATCH_CONTAINER_NAME} ${SCRATCH_IMAGE_NAME} bundle exec rake test
 
+release: install
+	docker run ${SCRATCH_CONTAINER_DOCKER_OPTS} --name ${SCRATCH_CONTAINER_NAME} ${SCRATCH_IMAGE_NAME} bundle exec rake release
+
 clean:
 	docker rm ${SCRATCH_CONTAINER_NAME}
 

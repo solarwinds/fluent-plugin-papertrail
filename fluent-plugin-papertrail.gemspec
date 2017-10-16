@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{Remote Syslog Output Fluentd plugin for papertrail}
   spec.description   = %q{Remote Syslog Output Fluentd plugin for papertrail}
-  spec.homepage      = "https://github.com/loz/fluent-plugin-papertrail"
-  spec.license       = "MIT"
+  spec.homepage      = "https://github.com/solarwinds/fluent-plugin-papertrail"
+  spec.license       = "Apache"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
