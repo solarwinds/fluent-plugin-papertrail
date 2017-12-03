@@ -75,3 +75,6 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/solarw
 ## License
 
 The gem is available as open source under the terms of the [Apache](LICENSE).
+
+# Questions/Comments?
+Please [open an issue](https://github.com/solarwinds/fluent-plugin-papertrail/issues/new), we'd love to hear from you. As a SolarWinds Innovation Project, this adapter is supported in a best-effort fashion.
