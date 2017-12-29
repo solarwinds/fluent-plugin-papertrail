@@ -1,3 +1,5 @@
+require 'syslog_protocol'
+
 module Fluent
   class Papertrail < Fluent::BufferedOutput
     attr_accessor :socket
@@ -10,11 +12,6 @@ module Fluent
 
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
-
-    def initialize
-      super
-      require 'syslog_protocol'
-    end
 
     def configure(conf)
       super
@@ -63,11 +60,11 @@ module Fluent
 
     def send_to_papertrail(packet)
       # recreate the socket if it's nil -- see below
-      unless @socket
-        @socket = create_socket(@papertrail_host, @papertrail_port)
-      end
+      @socket ||= create_socket(@papertrail_host, @papertrail_port)
 
-      if @socket
+      if @socket.nil?
+        log.warn "socket is nil -- failed to send: #{packet.assemble}"
+      else
         begin
           # send it
           @socket.puts packet.assemble
@@ -76,8 +73,6 @@ module Fluent
           # socket failed, reset to nil to recreate for the next write
           @socket = nil
         end
-      else
-        log.warn "socket is nil -- failed to send: #{packet.assemble}"
       end
     end
   end
