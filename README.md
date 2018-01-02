@@ -61,7 +61,7 @@ This plugin inherits a few useful config parameters from Fluent's BufferedOutput
 
 Parameters for flushing the buffer, based on size and time, are `buffer_chunk_limit` and `flush_interval`, respectively. This plugin overrides the inherited default `flush_interval` to `1`, causing the fluent buffer to flush to Papertrail every second. 
 
-If the plugin fails to write to Papertrail for any reason, the log message will be put back in Fluent's buffer and retried. By default, `retry_wait` is set to `1` second and `retry_limit` is set to `17` attempts.
+If the plugin fails to write to Papertrail for any reason, the log message will be put back in Fluent's buffer and retried. Retrying can be tuned and inherits a default configuration where `retry_wait` is set to `1` second and `retry_limit` is set to `17` attempts.
 
 If you want to change any of these parameters simply add them to a match stanza. For example, to flush the buffer every 60 seconds and stop retrying after 2 attempts, set something like:
 ```xml
