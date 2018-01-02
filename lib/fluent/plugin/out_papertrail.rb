@@ -63,7 +63,8 @@ module Fluent
       @socket ||= create_socket(@papertrail_host, @papertrail_port)
 
       if @socket.nil?
-        log.warn "socket is nil -- failed to send: #{packet.assemble}"
+        log.error "socket is nil -- failed to send: #{packet.assemble}"
+        raise 'Unable to create socket with Papertrail'
       else
         begin
           # send it
@@ -72,6 +73,7 @@ module Fluent
           log.error "connection error for #{@papertrail_host}:#{@papertrail_port}: #{e}"
           # socket failed, reset to nil to recreate for the next write
           @socket = nil
+          raise e
         end
       end
     end
