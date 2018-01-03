@@ -64,20 +64,21 @@ module Fluent
       @socket ||= create_socket(@papertrail_host, @papertrail_port)
 
       papertrail_addr = "#{@papertrail_host}:#{@papertrail_port}"
-      assembled_packet = packet.assemble
 
       if @socket.nil?
-        log.error "Unable to create socket with Papertrail. Failed to send: #{assembled_packet}"
-        raise SocketFailureError, 'Unable to create socket with Papertrail'
+        err_msg = "Unable to create socket with #{papertrail_addr}"
+        log.error err_msg
+        raise SocketFailureError, err_msg
       else
         begin
           # send it
-          @socket.puts assembled_packet
+          @socket.puts packet.assemble
         rescue => e
-          log.error "Error writing to #{papertrail_addr}: #{e}. Failed to send: #{assembled_packet}"
+          err_msg = "Error writing to #{papertrail_addr}: #{e}"
+          log.error err_msg
           # socket failed, reset to nil to recreate for the next write
           @socket = nil
-          raise SocketFailureError, "Failed writing to #{papertrail_addr}: #{e}", e.backtrace
+          raise SocketFailureError, err_msg, e.backtrace
         end
       end
     end
