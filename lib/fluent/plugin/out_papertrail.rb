@@ -2,6 +2,7 @@ require 'syslog_protocol'
 
 module Fluent
   class Papertrail < Fluent::BufferedOutput
+    class SocketFailureError < StandardError; end
     attr_accessor :socket
 
     # if left empty in fluent config these config_param's will error
@@ -62,18 +63,21 @@ module Fluent
       # recreate the socket if it's nil -- see below
       @socket ||= create_socket(@papertrail_host, @papertrail_port)
 
+      papertrail_addr = "#{@papertrail_host}:#{@papertrail_port}"
+      assembled_packet = packet.assemble
+
       if @socket.nil?
-        log.error "socket is nil -- failed to send: #{packet.assemble}"
-        raise 'Unable to create socket with Papertrail'
+        log.error "Unable to create socket with Papertrail. Failed to send: #{assembled_packet}"
+        raise SocketFailureError, 'Unable to create socket with Papertrail'
       else
         begin
           # send it
-          @socket.puts packet.assemble
+          @socket.puts assembled_packet
         rescue => e
-          log.error "connection error for #{@papertrail_host}:#{@papertrail_port}: #{e}"
+          log.error "Error writing to #{papertrail_addr}: #{e}. Failed to send: #{assembled_packet}"
           # socket failed, reset to nil to recreate for the next write
           @socket = nil
-          raise e
+          raise SocketFailureError, "Failed writing to #{papertrail_addr}: #{e}", e.backtrace
         end
       end
     end
