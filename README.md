@@ -74,7 +74,7 @@ If you want to change any of these parameters simply add them to a match stanza.
 </match>
 ```
 
-### Kubernetes
+## Kubernetes
 
 This repo also includes Kubernetes and Docker assets which do all of the heavy lifting for you.
 
