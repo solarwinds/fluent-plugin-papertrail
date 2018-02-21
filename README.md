@@ -1,6 +1,10 @@
 # Fluent::Plugin::Papertrail
 
-Welcome to the Papertrail Fluentd plugin!
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-papertrail.svg)](https://badge.fury.io/rb/fluent-plugin-papertrail) [![Docker Repository on Quay](https://quay.io/repository/solarwinds/fluentd-kubernetes/status "Docker Repository on Quay")](https://quay.io/repository/solarwinds/fluentd-kubernetes) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master)
+
+## Description
+
+This repository contains the Fluentd Papertrail Output Plugin and the Docker and Kubernetes assets for deploying that combined Fluentd, Papertrail, Kubernetes log aggregation toolset to your cluster.
 
 ## Installation
 
@@ -74,10 +78,22 @@ If you want to change any of these parameters simply add them to a match stanza.
 </match>
 ```
 
+## Kubernetes
+
+This repo also includes Kubernetes and Docker assets which do all of the heavy lifting for you.
+
+If you'd like to deploy this plugin as a DaemonSet to your Kubernetes cluster, just adjust the `FLUENT_*` environment variables in `kubernetes/fluentd-daemonset-papertrail.yaml` and push it to your cluster with:
+
+```
+kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
+```
+
+The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
+
 ## Development
 
-We use git, Make and Docker. 
-We have a [Dockerfile](Dockerfile.scratch) where we build a scratch image that contains all the dependencies.
+We use GitHub, Make and Docker. 
+We have a [scratch Dockerfile](Dockerfile.scratch) where we build an image that contains all the dependencies for working with the RubyGem.
 We have a [Makefile](Makefile) to wrap the common functions and make life easier.
 
 ### Install
@@ -86,10 +102,14 @@ We have a [Makefile](Makefile) to wrap the common functions and make life easier
 ### Test
 `make test`
 
-### Release in [RubyGems](RubyGems.org)
+### Release in [RubyGems](https://rubygems.org/gems/fluent-plugin-papertrail)
 To release a new version, update the version number in the [GemSpec](fluent-plugin-papertrail.gemspec) and then, run:
 
 `make release`
+
+### Release in [Quay.io](https://quay.io/repository/solarwinds/fluentd-kubernetes)
+
+`make release-docker TAG=$(VERSION)`
 
 ## Contributing
 

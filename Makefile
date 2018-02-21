@@ -18,6 +18,10 @@ release: install
 	docker run ${SCRATCH_CONTAINER_DOCKER_OPTS} --name ${SCRATCH_CONTAINER_NAME} ${SCRATCH_IMAGE_NAME} bundle exec gem build ${REPO_NAME}.gemspec
 	docker run -it ${SCRATCH_CONTAINER_DOCKER_OPTS} --name ${SCRATCH_CONTAINER_NAME} ${SCRATCH_IMAGE_NAME} bundle exec gem push ${REPO_NAME}-*.gem
 
+release-docker:
+	cd docker; docker build -t quay.io/solarwinds/fluentd-kubernetes:$(TAG) .
+	docker push quay.io/solarwinds/fluentd-kubernetes:$(TAG)
+
 clean:
 	docker rm ${SCRATCH_CONTAINER_NAME}
 
