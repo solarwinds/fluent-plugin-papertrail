@@ -92,8 +92,8 @@ The Dockerfile that generates [the image used in this DaemonSet](https://quay.io
 
 ## Development
 
-We use git, Make and Docker. 
-We have a [Dockerfile](Dockerfile.scratch) where we build a scratch image that contains all the dependencies.
+We use GitHub, Make and Docker. 
+We have a [scratch Dockerfile](Dockerfile.scratch) where we build an image that contains all the dependencies for working with the RubyGem.
 We have a [Makefile](Makefile) to wrap the common functions and make life easier.
 
 ### Install
@@ -102,10 +102,14 @@ We have a [Makefile](Makefile) to wrap the common functions and make life easier
 ### Test
 `make test`
 
-### Release in [RubyGems](RubyGems.org)
+### Release in [RubyGems](https://rubygems.org/gems/fluent-plugin-papertrail)
 To release a new version, update the version number in the [GemSpec](fluent-plugin-papertrail.gemspec) and then, run:
 
 `make release`
+
+### Release in [Quay.io](https://quay.io/repository/solarwinds/fluentd-kubernetes)
+
+`make release-docker TAG=$(VERSION)`
 
 ## Contributing
 
