@@ -1,6 +1,10 @@
 # Fluent::Plugin::Papertrail
 
-Welcome to the Papertrail Fluentd plugin!
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-papertrail.svg)](https://badge.fury.io/rb/fluent-plugin-papertrail) [![Docker Repository on Quay](https://quay.io/repository/solarwinds/fluentd-kubernetes/status "Docker Repository on Quay")](https://quay.io/repository/solarwinds/fluentd-kubernetes) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master)
+
+## Description
+
+This repository contains the Fluentd Papertrail Output Plugin and the Docker and Kubernetes assets for deploying that combined Fluentd, Papertrail, Kubernetes log aggregation toolset to your cluster.
 
 ## Installation
 
@@ -84,13 +88,7 @@ If you'd like to deploy this plugin as a DaemonSet to your Kubernetes cluster, j
 kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
 ```
 
-The Dockerfile that generates the image used in this DaemonSet, can be found at `docker/Dockerfile`. Changes can be pushed to the official repo by running:
-
-```
-cd docker
-docker build -t quay.io/solarwinds/fluentd-kubernetes:v0.12.33-debian-papertrail .
-docker push quay.io/solarwinds/fluentd-kubernetes:v0.12.33-debian-papertrail
-```
+The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
 
 ## Development
 
