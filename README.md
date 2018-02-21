@@ -74,6 +74,24 @@ If you want to change any of these parameters simply add them to a match stanza.
 </match>
 ```
 
+### Kubernetes
+
+This repo also includes Kubernetes and Docker assets which do all of the heavy lifting for you.
+
+If you'd like to deploy this plugin as a DaemonSet to your Kubernetes cluster, just adjust the `FLUENT_*` environment variables in `kubernetes/fluentd-daemonset-papertrail.yaml` and push it to your cluster with:
+
+```
+kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
+```
+
+The Dockerfile that generates the image used in this DaemonSet, can be found at `docker/Dockerfile`. Changes can be pushed to the official repo by running:
+
+```
+cd docker
+docker build -t quay.io/solarwinds/fluentd-kubernetes:v0.12.33-debian-papertrail .
+docker push quay.io/solarwinds/fluentd-kubernetes:v0.12.33-debian-papertrail
+```
+
 ## Development
 
 We use git, Make and Docker. 
