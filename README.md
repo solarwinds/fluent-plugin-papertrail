@@ -61,7 +61,7 @@ the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/flue
 ```
 
 ### Advanced Configuration
-This plugin inherits a few useful config parameters from Fluent's BufferedOutput class.
+This plugin inherits a few useful config parameters from Fluent's `BufferedOutput` class.
 
 Parameters for flushing the buffer, based on size and time, are `buffer_chunk_limit` and `flush_interval`, respectively. This plugin overrides the inherited default `flush_interval` to `1`, causing the fluent buffer to flush to Papertrail every second. 
 
