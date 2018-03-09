@@ -33,16 +33,6 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
     }
   end
 
-  def test_create_socket_defaults_to_ssl_socket
-    # override the test configuration from above to
-    # create a live SSLSocket with papertrailapp.com
-    @driver.configure('
-      papertrail_host logs3.papertrailapp.com
-      papertrail_port 12345
-      ')
-    assert @driver.instance.socket.is_a? OpenSSL::SSL::SSLSocket
-  end
-
   def test_configure_empty_configuration
     begin
       @driver.configure('')
