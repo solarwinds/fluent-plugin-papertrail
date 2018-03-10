@@ -3,25 +3,26 @@ FROM fluent/fluentd:v1.1.1-debian
 USER root
 WORKDIR /home/fluent
 ENV PATH /home/fluent/.gem/ruby/2.3.0/bin:$PATH
+ENV BUILDDEPS="sudo make gcc g++ libc-dev ruby-dev libffi-dev"
 
-RUN buildDeps="sudo make gcc g++ libc-dev ruby-dev libffi-dev" \
-     && apt-get update \
-     && apt-get upgrade -y \
-     && apt-get install \
-     -y --no-install-recommends \
-     $buildDeps \
-    && echo 'gem: --no-document' >> /etc/gemrc \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+    $BUILDDEPS
+
+RUN echo 'gem: --no-document' >> /etc/gemrc \
     && gem install fluent-plugin-secure-forward \
     && gem install fluent-plugin-record-reformer \
     && gem install fluent-plugin-systemd -v 0.3.1 \
     && gem install fluent-plugin-rewrite-tag-filter -v 1.6.0 \
     && gem install fluent-plugin-papertrail -v 0.1.2 \
     && gem install fluent-plugin-kubernetes_metadata_filter \
-    && gem install ffi \
-    && SUDO_FORCE_REMOVE=yes \
+    && gem install ffi
+
+RUN SUDO_FORCE_REMOVE=yes \
     apt-get purge -y --auto-remove \
                   -o APT::AutoRemove::RecommendsImportant=false \
-                  $buildDeps \
+                  $BUILDDEPS \
     && rm -rf /var/lib/apt/lists/* \
     && gem sources --clear-all \
     && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem
