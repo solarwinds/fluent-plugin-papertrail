@@ -23,7 +23,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: fluentd
-        image: quay.io/solarwinds/fluentd-kubernetes:v0.12.33-debian-papertrail
+        image: quay.io/solarwinds/fluentd-kubernetes:v1.1.1-debian-papertrail
         imagePullPolicy: Always
         env:
           - name: FLUENT_PAPERTRAIL_HOST
