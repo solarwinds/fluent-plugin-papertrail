@@ -1,4 +1,4 @@
-FROM fluent/fluentd:v0.12.33-debian
+FROM fluent/fluentd:v1.1.1-debian
 
 USER root
 WORKDIR /home/fluent
@@ -15,7 +15,7 @@ RUN buildDeps="sudo make gcc g++ libc-dev ruby-dev libffi-dev" \
     && gem install fluent-plugin-record-reformer \
     && gem install fluent-plugin-systemd -v 0.3.1 \
     && gem install fluent-plugin-rewrite-tag-filter -v 1.6.0 \
-    && gem install fluent-plugin-papertrail -v 0.1.1 \
+    && gem install fluent-plugin-papertrail -v 0.1.2 \
     && gem install fluent-plugin-kubernetes_metadata_filter \
     && gem install ffi \
     && SUDO_FORCE_REMOVE=yes \
@@ -42,6 +42,9 @@ ENV FLUENTD_CONF="fluent.conf"
 # td-agent is provided and QA'ed by treasuredata as rpm/deb/.. package
 # -> td-agent (stable) vs fluentd (edge)
 #ENV LD_PRELOAD="/usr/lib/libjemalloc.so.2"
+
+# Overriding entrypoint, otherwise parent image causes to run as user fluent
+ENTRYPOINT []
 
 # Run Fluentd
 CMD exec fluentd -c /fluentd/etc/$FLUENTD_CONF -p /fluentd/plugins $FLUENTD_OPT
