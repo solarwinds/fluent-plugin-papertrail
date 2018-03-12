@@ -92,12 +92,12 @@ The Dockerfile that generates [the image used in this DaemonSet](https://quay.io
 
 ## Development
 
-We use GitHub, Make and Docker. 
-We have a [scratch Dockerfile](Dockerfile.scratch) where we build an image that contains all the dependencies for working with the RubyGem.
-We have a [Makefile](Makefile) to wrap the common functions and make life easier.
+This plugin is targeting Ruby 2.4 and Fluentd v1.0, although it should work with older versions of both.
 
-### Install
-`make install`
+We have a [Makefile](Makefile) to wrap common functions and make life easier.
+
+### Install Dependencies
+`make bundle`
 
 ### Test
 `make test`
@@ -113,7 +113,7 @@ To release a new version, update the version number in the [GemSpec](fluent-plug
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/solarwinds/fluent-plugin-papertrail.
+Bug reports and pull requests are welcome on GitHub at: https://github.com/solarwinds/fluent-plugin-papertrail
 
 ## License
 
