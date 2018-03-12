@@ -113,7 +113,7 @@ To release a new version, update the version number in the [GemSpec](fluent-plug
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/solarwinds/fluent-plugin-papertrail.
+Bug reports and pull requests are welcome on GitHub at: https://github.com/solarwinds/fluent-plugin-papertrail
 
 ## License
 
