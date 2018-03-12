@@ -11,13 +11,10 @@ RUN apt-get update \
     $BUILDDEPS
 
 RUN echo 'gem: --no-document' >> /etc/gemrc \
-    && gem install fluent-plugin-secure-forward \
-    && gem install fluent-plugin-record-reformer \
     && gem install fluent-plugin-systemd -v 0.3.1 \
     && gem install fluent-plugin-rewrite-tag-filter -v 1.6.0 \
     && gem install fluent-plugin-papertrail -v 0.1.2 \
-    && gem install fluent-plugin-kubernetes_metadata_filter \
-    && gem install ffi
+    && gem install fluent-plugin-kubernetes_metadata_filter
 
 RUN SUDO_FORCE_REMOVE=yes \
     apt-get purge -y --auto-remove \
