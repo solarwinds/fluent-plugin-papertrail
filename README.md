@@ -31,6 +31,8 @@ To configure this in fluentd:
 </match>
 ```
 
+### Configuring a record_transformer
+
 This plugin expects the following fields to be set for each Fluent record:
 ```
     message   The log
