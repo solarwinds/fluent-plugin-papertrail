@@ -1,4 +1,3 @@
-# Uncomment sections below to allow audit logs to go to a separate host
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -30,10 +29,6 @@ spec:
             value: 'logsN.papertrailapp.com'
           - name: FLUENT_PAPERTRAIL_PORT
             value: 'NNNNN'
-#          - name: FLUENT_PAPERTRAIL_AUDIT_HOST
-#            value: 'logsN.papertrailapp.com'
-#          - name: FLUENT_PAPERTRAIL_AUDIT_PORT
-#            value: 'NNNNN'
           - name: FLUENT_HOSTNAME
             value: 'my-cluster-name'
         resources:
@@ -77,16 +72,6 @@ data:
     @include kubernetes.conf
     @include systemd.conf
 
-#    # Capture audit logs
-#    <match kube-apiserver-audit>
-#      type papertrail
-#      num_threads 4
-#
-#      papertrail_host "#{ENV['FLUENT_PAPERTRAIL_AUDIT_HOST']}"
-#      papertrail_port "#{ENV['FLUENT_PAPERTRAIL_AUDIT_PORT']}"
-#    </match>
-#
-    # Capture all unmatched tags
     <match **>
       type papertrail
       num_threads 4

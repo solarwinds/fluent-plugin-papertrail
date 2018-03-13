@@ -91,6 +91,17 @@ kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
 
 The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
 
+If you'd like to redirect Kubernetes API Server Audit logs to a seperate Papertrail destination, add the following to your `fluent.conf`:
+```
+<match kube-apiserver-audit>
+    type papertrail
+    num_threads 4
+
+    papertrail_host "#{ENV['FLUENT_PAPERTRAIL_AUDIT_HOST']}"
+    papertrail_port "#{ENV['FLUENT_PAPERTRAIL_AUDIT_PORT']}"
+</match>
+```
+
 ## Development
 
 This plugin is targeting Ruby 2.4 and Fluentd v1.0, although it should work with older versions of both.
