@@ -11,13 +11,10 @@ RUN apt-get update \
     $BUILDDEPS
 
 RUN echo 'gem: --no-document' >> /etc/gemrc \
-    && gem install fluent-plugin-secure-forward \
-    && gem install fluent-plugin-record-reformer \
     && gem install fluent-plugin-systemd -v 0.3.1 \
     && gem install fluent-plugin-rewrite-tag-filter -v 1.6.0 \
-    && gem install fluent-plugin-papertrail -v 0.1.2 \
-    && gem install fluent-plugin-kubernetes_metadata_filter \
-    && gem install ffi
+    && gem install fluent-plugin-papertrail -v 0.1.3 \
+    && gem install fluent-plugin-kubernetes_metadata_filter
 
 RUN SUDO_FORCE_REMOVE=yes \
     apt-get purge -y --auto-remove \
@@ -38,11 +35,6 @@ COPY plugins /fluentd/plugins/
 # Environment variables
 ENV FLUENTD_OPT=""
 ENV FLUENTD_CONF="fluent.conf"
-
-# jemalloc is memory optimization only available for td-agent
-# td-agent is provided and QA'ed by treasuredata as rpm/deb/.. package
-# -> td-agent (stable) vs fluentd (edge)
-#ENV LD_PRELOAD="/usr/lib/libjemalloc.so.2"
 
 # Overriding entrypoint, otherwise parent image causes to run as user fluent
 ENTRYPOINT []

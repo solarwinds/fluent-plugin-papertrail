@@ -8,8 +8,11 @@ module Fluent
     # if left empty in fluent config these config_param's will error
     config_param :papertrail_host, :string
     config_param :papertrail_port, :integer
+    # default to ENV['FLUENT_HOSTNAME'] or :default_hostname if no hostname in record
+    config_param :default_hostname, :string, default: 'unidentified'
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
     config_param :flush_interval, :time, default: 1
+
 
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
@@ -17,6 +20,7 @@ module Fluent
     def configure(conf)
       super
       @socket = create_socket(@papertrail_host, @papertrail_port)
+      @default_hostname = ENV['FLUENT_HOSTNAME'] || @default_hostname
     end
 
     def format(tag, time, record)
@@ -50,10 +54,10 @@ module Fluent
     def create_packet(tag,time,record)
       # construct syslog packet from fluent record
       packet = SyslogProtocol::Packet.new
-      packet.hostname = record['hostname']
-      packet.facility = record['facility']
-      packet.severity = record['severity']
-      packet.tag      = record['program']
+      packet.hostname = record['hostname'] || @default_hostname
+      packet.facility = record['facility'] || 'local0'
+      packet.severity = record['severity'] || 'info'
+      packet.tag      = record['program'] || tag
       packet.content  = record['message']
       packet.time     = time ? Time.at(time) : Time.now
       packet

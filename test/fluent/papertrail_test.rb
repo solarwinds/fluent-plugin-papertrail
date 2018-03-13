@@ -5,7 +5,7 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
   class TestSocket
     attr_reader :packets
 
-    def initialize()
+    def initialize
       @packets = []
     end
 
@@ -25,11 +25,11 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
       ")
     @driver.instance.socket = TestSocket.new
     @default_record = {
-        'hostname' => 'some.host.name',
-        'facility' => 'local0',
-        'severity' => 'warn',
-        'program' => 'someprogram',
-        'message' => 'some_message'
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program' => 'some_program',
+      'message' => 'some_message'
     }
   end
 
@@ -60,6 +60,40 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
     converted_date = '1987-06-13'
     packet = @driver.instance.create_packet(nil, epoch_time, @default_record)
     assert packet.time.to_s.include? converted_date
+  end
+
+  def test_create_packet_without_hostname
+    # default hostname is 'unidentified'
+    no_hostname_record = {
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program' => 'some_program',
+      'message' => 'some_message'
+    }
+    default_hostname = 'unidentified'
+    packet = @driver.instance.create_packet(nil, nil, no_hostname_record)
+    assert packet.hostname.to_s.eql? default_hostname
+    # but if FLUENT_HOSTNAME environment variable is set, then that is used instead
+    # so, set FLUENT_HOSTNAME and reconfigure driver to reload from ENV
+    ENV['FLUENT_HOSTNAME'] = 'my_cluster'
+    @driver.configure("
+      papertrail_host #{@mock_host}
+      papertrail_port #{@mock_port}
+      ")
+    packet = @driver.instance.create_packet(nil, nil, no_hostname_record)
+    assert packet.hostname.to_s.eql? ENV['FLUENT_HOSTNAME']
+  end
+
+  def test_create_packet_without_program
+    no_program_record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'message' => 'some_message'
+    }
+    some_tag = 'some_tag'
+    packet = @driver.instance.create_packet(some_tag, nil, no_program_record)
+    assert packet.tag.to_s.eql? some_tag
   end
 
   def test_send_to_papertrail_with_test_socket

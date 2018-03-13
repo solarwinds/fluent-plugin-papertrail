@@ -31,7 +31,9 @@ To configure this in fluentd:
 </match>
 ```
 
-Use a record transform plugin to populate within the record the following fields:
+### Configuring a record_transformer
+
+This plugin expects the following fields to be set for each Fluent record:
 ```
     message   The log
     program   The program/tag
@@ -40,8 +42,7 @@ Use a record transform plugin to populate within the record the following fields
     hostname  The source hostname for papertrail logging
 ```
 
-The following snippet sets up the records for Kubernetes and assumes you are using
-the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter) plugin which populates the record with useful metadata:
+The following example is a `record_transformer` filter, from the [Kubernetes assets](docker/conf/kubernetes.conf) in this repo, that is used along with the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter) to populate the required fields for our plugin:
 ```yaml
 <filter kubernetes.**>
   type kubernetes_metadata
@@ -59,6 +60,8 @@ the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/flue
   </record>
 </filter>
 ```
+
+If you don't set `hostname` and `program` values in your record, they will default to the environment variable `FLUENT_HOSTNAME` or `'unidentified'` and the fluent tag, respectively.
 
 ### Advanced Configuration
 This plugin inherits a few useful config parameters from Fluent's `BufferedOutput` class.
@@ -89,6 +92,17 @@ kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
 ```
 
 The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
+
+If you'd like to redirect Kubernetes API Server Audit logs to a seperate Papertrail destination, add the following to your `fluent.conf`:
+```
+<match kube-apiserver-audit>
+    type papertrail
+    num_threads 4
+
+    papertrail_host "#{ENV['FLUENT_PAPERTRAIL_AUDIT_HOST']}"
+    papertrail_port "#{ENV['FLUENT_PAPERTRAIL_AUDIT_PORT']}"
+</match>
+```
 
 ## Development
 
