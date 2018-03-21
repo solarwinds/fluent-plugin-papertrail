@@ -3,7 +3,7 @@ require 'syslog_protocol'
 module Fluent
   class Papertrail < Fluent::BufferedOutput
     class SocketFailureError < StandardError; end
-    attr_accessor :socket
+    attr_accessor :sockets
 
     # if left empty in fluent config these config_param's will error
     config_param :papertrail_host, :string
@@ -13,13 +13,16 @@ module Fluent
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
     config_param :flush_interval, :time, default: 1
 
-
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
 
     def configure(conf)
       super
-      @socket = create_socket(@papertrail_host, @papertrail_port)
+      # create initial sockets hash and socket based on config param
+      @sockets = {}
+      socket_key = "#{@papertrail_host}:#{@papertrail_port}"
+      @sockets[socket_key] = create_socket(@papertrail_host, @papertrail_port)
+      # redefine default hostname if it's been passed in through ENV
       @default_hostname = ENV['FLUENT_HOSTNAME'] || @default_hostname
     end
 
@@ -29,8 +32,9 @@ module Fluent
 
     def write(chunk)
       chunk.msgpack_each {|(tag, time, record)|
+        socket_key = pick_socket(record)
         packet = create_packet(tag, time, record)
-        send_to_papertrail(packet)
+        send_to_papertrail(packet, socket_key)
       }
     end
 
@@ -51,7 +55,7 @@ module Fluent
       ssl
     end
 
-    def create_packet(tag,time,record)
+    def create_packet(tag, time, record)
       # construct syslog packet from fluent record
       packet = SyslogProtocol::Packet.new
       packet.hostname = record['hostname'] || @default_hostname
@@ -63,25 +67,42 @@ module Fluent
       packet
     end
 
-    def send_to_papertrail(packet)
-      # recreate the socket if it's nil -- see below
-      @socket ||= create_socket(@papertrail_host, @papertrail_port)
+    def pick_socket(record)
+      # if kubernetes pod has papertrail destination as annotation, use it
+      if record.dig('kubernetes', 'annotations', 'solarwinds_io/papertrail_host') && \
+         record.dig('kubernetes', 'annotations', 'solarwinds_io/papertrail_port')
+        host = record['kubernetes']['annotations']['solarwinds_io/papertrail_host']
+        port = record['kubernetes']['annotations']['solarwinds_io/papertrail_port']
+      # else if kubernetes namespace has papertrail destination as annotation, use it
+      elsif record.dig('kubernetes', 'namespace_annotations', 'solarwinds_io/papertrail_host') && \
+            record.dig('kubernetes', 'namespace_annotations', 'solarwinds_io/papertrail_port')
+        host = record['kubernetes']['namespace_annotations']['solarwinds_io/papertrail_host']
+        port = record['kubernetes']['namespace_annotations']['solarwinds_io/papertrail_port']
+      # else use pre-configured destination
+      else
+        host = @papertrail_host
+        port = @papertrail_port
+      end
+      socket_key = "#{host}:#{port}"
+      # recreate the socket if it's nil
+      @sockets[socket_key] ||= create_socket(host, port)
+      socket_key
+    end
 
-      papertrail_addr = "#{@papertrail_host}:#{@papertrail_port}"
-
-      if @socket.nil?
-        err_msg = "Unable to create socket with #{papertrail_addr}"
+    def send_to_papertrail(packet, socket_key)
+      if @sockets[socket_key].nil?
+        err_msg = "Unable to create socket with #{socket_key}"
         log.error err_msg
         raise SocketFailureError, err_msg
       else
         begin
           # send it
-          @socket.puts packet.assemble
+          @sockets[socket_key].puts packet.assemble
         rescue => e
-          err_msg = "Error writing to #{papertrail_addr}: #{e}"
+          err_msg = "Error writing to #{socket_key}: #{e}"
           log.error err_msg
           # socket failed, reset to nil to recreate for the next write
-          @socket = nil
+          @sockets[socket_key] = nil
           raise SocketFailureError, err_msg, e.backtrace
         end
       end
