@@ -23,7 +23,8 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
       papertrail_host #{@mock_host}
       papertrail_port #{@mock_port}
       ")
-    @driver.instance.socket = TestSocket.new
+    @socket_key = "#{@mock_host}:#{@mock_port}"
+    @driver.instance.sockets[@socket_key] = TestSocket.new
     @default_record = {
       'hostname' => 'some_hostname',
       'facility' => 'local0',
@@ -98,9 +99,48 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
 
   def test_send_to_papertrail_with_test_socket
     snt_packet = @driver.instance.create_packet(nil, nil, @default_record)
-    @driver.instance.send_to_papertrail(snt_packet)
-    rcv_packet = @driver.instance.socket.packets.last
+    @driver.instance.send_to_papertrail(snt_packet, @socket_key)
+    rcv_packet = @driver.instance.sockets[@socket_key].packets.last
     assert rcv_packet.eql? snt_packet.assemble
   end
 
+  def test_pick_socket
+    namespace_host = 'namespace_host'
+    namespace_port = 'namespace_port'
+    namespace_annotation_record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program' => 'some_program',
+      'message' => 'some_message',
+      'kubernetes' => {
+        'namespace_annotations' => {
+          'solarwinds_io/papertrail_host' => namespace_host,
+          'solarwinds_io/papertrail_port' => namespace_port
+        }
+      }
+    }
+    namespace_socket_key = "#{namespace_host}:#{namespace_port}"
+    @driver.instance.pick_socket(namespace_annotation_record)
+    assert true.eql? @driver.instance.sockets.key?(namespace_socket_key)
+
+    pod_host = 'pod_host'
+    pod_port = 'pod_port'
+    pod_annotation_record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program' => 'some_program',
+      'message' => 'some_message',
+      'kubernetes' => {
+        'annotations' => {
+          'solarwinds_io/papertrail_host' => pod_host,
+          'solarwinds_io/papertrail_port' => pod_port
+        }
+      }
+    }
+    pod_socket_key = "#{pod_host}:#{pod_port}"
+    @driver.instance.pick_socket(pod_annotation_record)
+    assert true.eql? @driver.instance.sockets.key?(pod_socket_key)
+  end
 end

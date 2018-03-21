@@ -83,15 +83,28 @@ If you want to change any of these parameters simply add them to a match stanza.
 
 ## Kubernetes
 
-This repo also includes Kubernetes and Docker assets which do all of the heavy lifting for you.
+This repo includes a Kubernetes DaemonSet and accompanying Docker container which will stream all of your Kubernetes logs, containers and services, to Papertrail.
 
-If you'd like to deploy this plugin as a DaemonSet to your Kubernetes cluster, just adjust the `FLUENT_*` environment variables in `kubernetes/fluentd-daemonset-papertrail.yaml` and push it to your cluster with:
+To deploy this plugin as a DaemonSet to your Kubernetes cluster, just adjust the `FLUENT_*` environment variables in `kubernetes/fluentd-daemonset-papertrail.yaml` and push it to your cluster with:
 
 ```
 kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
 ```
 
 The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
+
+### Annotations
+
+You can redirect logs to alternate Papertrail destinations by adding annotations to your Pods or Namespaces:
+
+```
+solarwinds.io/papertrail_host: 'logs0.papertrailapp.com'
+solarwinds.io/papertrail_port: '12345'
+```
+
+If both the Pod and Namespace have annotations for any running Pod, the Pod's annotation is used.
+
+### Audit Logs
 
 If you'd like to redirect Kubernetes API Server Audit logs to a seperate Papertrail destination, add the following to your `fluent.conf`:
 ```
@@ -103,6 +116,8 @@ If you'd like to redirect Kubernetes API Server Audit logs to a seperate Papertr
     papertrail_port "#{ENV['FLUENT_PAPERTRAIL_AUDIT_PORT']}"
 </match>
 ```
+
+This requires you to configure an [audit policy file](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/) on your cluster.
 
 ## Development
 
