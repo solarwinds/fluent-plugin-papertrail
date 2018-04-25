@@ -14,6 +14,8 @@ RUN echo 'gem: --no-document' >> /etc/gemrc \
     && gem install fluent-plugin-systemd -v 0.3.1 \
     && gem install fluent-plugin-rewrite-tag-filter -v 1.6.0 \
     && gem install fluent-plugin-papertrail -v 0.2.3 \
+    && gem install fluent-plugin-loggly-anno \
+    && gem install fluent-plugin-kubernetes_metadata_input \
     && gem install fluent-plugin-kubernetes_metadata_filter
 
 RUN SUDO_FORCE_REMOVE=yes \
