@@ -22,7 +22,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: fluentd
-        image: quay.io/solarwinds/fluentd-kubernetes:v1.1.1-debian-papertrail-0.2.3
+        image: quay.io/solarwinds/fluentd-kubernetes:v1.1.1-debian-papertrail-0.2.4
         imagePullPolicy: Always
         env:
           - name: FLUENT_PAPERTRAIL_HOST
@@ -31,6 +31,10 @@ spec:
             value: 'NNNNN'
           - name: FLUENT_HOSTNAME
             value: 'my-cluster-name'
+          - name: K8S_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
         resources:
           limits:
             cpu: 200m
