@@ -31,6 +31,10 @@ spec:
             value: 'NNNNN'
           - name: FLUENT_HOSTNAME
             value: 'my-cluster-name'
+          - name: K8S_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
         resources:
           limits:
             cpu: 200m
