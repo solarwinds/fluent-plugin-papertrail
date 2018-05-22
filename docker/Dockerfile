@@ -7,18 +7,14 @@ ENV BUILDDEPS="sudo make gcc g++ libc-dev ruby-dev libffi-dev"
 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends \
-    $BUILDDEPS
-
-RUN echo 'gem: --no-document' >> /etc/gemrc \
+    && apt-get install -y --no-install-recommends $BUILDDEPS \
+    && echo 'gem: --no-document' >> /etc/gemrc \
     && gem install fluent-plugin-systemd -v 0.3.1 \
     && gem install fluent-plugin-papertrail -v 0.2.4 \
     && gem install fluent-plugin-loggly-syslog -v 0.0.1 \
     && gem install fluent-plugin-kubernetes_metadata_input -v 0.21.11 \
-    && gem install fluent-plugin-kubernetes_metadata_filter -v 2.0.0
-
-RUN SUDO_FORCE_REMOVE=yes \
-    apt-get purge -y --auto-remove \
+    && gem install fluent-plugin-kubernetes_metadata_filter -v 2.0.0 \
+    && SUDO_FORCE_REMOVE=yes apt-get purge -y --auto-remove \
                   -o APT::AutoRemove::RecommendsImportant=false \
                   $BUILDDEPS \
     && rm -rf /var/lib/apt/lists/* \
