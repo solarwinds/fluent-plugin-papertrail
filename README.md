@@ -1,10 +1,10 @@
 # Fluent::Plugin::Papertrail
 
-[![Gem Version](https://badge.fury.io/rb/fluent-plugin-papertrail.svg)](https://badge.fury.io/rb/fluent-plugin-papertrail) [![Docker Repository on Quay](https://quay.io/repository/solarwinds/fluentd-kubernetes/status "Docker Repository on Quay")](https://quay.io/repository/solarwinds/fluentd-kubernetes) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master)
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-papertrail.svg)](https://badge.fury.io/rb/fluent-plugin-papertrail) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master)
 
 ## Description
 
-This repository contains the Fluentd Papertrail Output Plugin and the Docker and Kubernetes assets for deploying that combined Fluentd, Papertrail, Kubernetes log aggregation toolset to your cluster.
+This repository contains the Fluentd Papertrail Output Plugin.
 
 ## Installation
 
@@ -42,7 +42,7 @@ This plugin expects the following fields to be set for each Fluent record:
     hostname  The source hostname for papertrail logging
 ```
 
-The following example is a `record_transformer` filter, from the [Kubernetes assets](docker/conf/kubernetes.conf) in this repo, that is used along with the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter) to populate the required fields for our plugin:
+The following example is a `record_transformer` filter, from the Kubernetes assets [in the Solarwinds fluentd-deployment repo](https://github.com/solarwinds/fluentd-deployment/blob/master/docker/conf/kubernetes.conf), that is used along with the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter) to populate the required fields for our plugin:
 ```yaml
 <filter kubernetes.**>
   type kubernetes_metadata
@@ -81,21 +81,9 @@ If you want to change any of these parameters simply add them to a match stanza.
 </match>
 ```
 
-## Kubernetes
+## Kubernetes Annotations
 
-This repo includes a Kubernetes DaemonSet and accompanying Docker container which will stream all of your Kubernetes logs, containers and services, to Papertrail.
-
-To deploy this plugin as a DaemonSet to your Kubernetes cluster, just adjust the `FLUENT_*` environment variables in `kubernetes/fluentd-daemonset-papertrail.yaml` and push it to your cluster with:
-
-```
-kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
-```
-
-The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
-
-### Annotations
-
-You can redirect logs to alternate Papertrail destinations by adding annotations to your Pods or Namespaces:
+If you're running this plugin in Kubernetes with the kubernetes_metadata_filter plugin enabled you can redirect logs to alternate Papertrail destinations by adding annotations to your Pods or Namespaces:
 
 ```
 solarwinds.io/papertrail_host: 'logs0.papertrailapp.com'
@@ -103,21 +91,6 @@ solarwinds.io/papertrail_port: '12345'
 ```
 
 If both the Pod and Namespace have annotations for any running Pod, the Pod's annotation is used.
-
-### Audit Logs
-
-If you'd like to redirect Kubernetes API Server Audit logs to a seperate Papertrail destination, add the following to your `fluent.conf`:
-```
-<match kube-apiserver-audit>
-    type papertrail
-    num_threads 4
-
-    papertrail_host "#{ENV['FLUENT_PAPERTRAIL_AUDIT_HOST']}"
-    papertrail_port "#{ENV['FLUENT_PAPERTRAIL_AUDIT_PORT']}"
-</match>
-```
-
-This requires you to configure an [audit policy file](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/) on your cluster.
 
 ## Development
 
@@ -135,10 +108,6 @@ We have a [Makefile](Makefile) to wrap common functions and make life easier.
 To release a new version, update the version number in the [GemSpec](fluent-plugin-papertrail.gemspec) and then, run:
 
 `make release`
-
-### Release in [Quay.io](https://quay.io/repository/solarwinds/fluentd-kubernetes)
-
-`make release-docker TAG=$(VERSION)`
 
 ## Contributing
 

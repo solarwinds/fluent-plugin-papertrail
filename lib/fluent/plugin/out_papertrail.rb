@@ -92,7 +92,6 @@ module Fluent
     def send_to_papertrail(packet, socket_key)
       if @sockets[socket_key].nil?
         err_msg = "Unable to create socket with #{socket_key}"
-        log.error err_msg
         raise SocketFailureError, err_msg
       else
         begin
@@ -100,7 +99,6 @@ module Fluent
           @sockets[socket_key].puts packet.assemble
         rescue => e
           err_msg = "Error writing to #{socket_key}: #{e}"
-          log.error err_msg
           # socket failed, reset to nil to recreate for the next write
           @sockets[socket_key] = nil
           raise SocketFailureError, err_msg, e.backtrace
