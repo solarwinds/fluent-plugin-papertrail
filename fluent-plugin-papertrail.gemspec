@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-papertrail"
-  spec.version       = "0.2.4"
+  spec.version       = "0.2.5"
   spec.authors       = ["Jonathan Lozinski", "Alex Ouzounis", "Chris Rust"]
   spec.email         = ["jonathan.lozinski@solarwinds.com", "alex.ouzounis@solarwinds.com", "chris.rust@solarwinds.com"]
 
