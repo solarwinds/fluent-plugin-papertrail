@@ -122,6 +122,7 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
     }
     namespace_socket_key = "#{namespace_host}:#{namespace_port}"
     @driver.instance.pick_socket(namespace_annotation_record)
+    @driver.instance.sockets[namespace_socket_key] ||= @driver.instance.create_socket(namespace_socket_key)
     assert true.eql? @driver.instance.sockets.key?(namespace_socket_key)
 
     pod_host = 'pod_host'
@@ -141,6 +142,7 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
     }
     pod_socket_key = "#{pod_host}:#{pod_port}"
     @driver.instance.pick_socket(pod_annotation_record)
+    @driver.instance.sockets[pod_socket_key] ||= @driver.instance.create_socket(pod_socket_key)
     assert true.eql? @driver.instance.sockets.key?(pod_socket_key)
   end
 end

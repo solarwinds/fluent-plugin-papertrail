@@ -12,16 +12,20 @@ module Fluent
     config_param :default_hostname, :string, default: 'unidentified'
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
     config_param :flush_interval, :time, default: 1
+    config_param :discard_unannotated_pod_logs, :bool, default: false
 
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
+
+    # declare const string for nullifying token if we decide to discard records
+    DISCARD_STRING = 'DISCARD'
 
     def configure(conf)
       super
       # create initial sockets hash and socket based on config param
       @sockets = {}
-      socket_key = "#{@papertrail_host}:#{@papertrail_port}"
-      @sockets[socket_key] = create_socket(@papertrail_host, @papertrail_port)
+      socket_key = form_socket_key(@papertrail_host, @papertrail_port)
+      @sockets[socket_key] = create_socket(socket_key)
       # redefine default hostname if it's been passed in through ENV
       @default_hostname = ENV['FLUENT_HOSTNAME'] || @default_hostname
     end
@@ -33,23 +37,37 @@ module Fluent
     def write(chunk)
       chunk.msgpack_each {|(tag, time, record)|
         socket_key = pick_socket(record)
-        packet = create_packet(tag, time, record)
-        send_to_papertrail(packet, socket_key)
+        unless socket_key.eql? form_socket_key(DISCARD_STRING, DISCARD_STRING)
+          # recreate the socket if it's nil
+          @sockets[socket_key] ||= create_socket(socket_key)
+          packet = create_packet(tag, time, record)
+          send_to_papertrail(packet, socket_key)
+        end
       }
     end
 
-    def create_socket(host, port)
-      log.info "initializing tcp socket for #{host}:#{port}"
+    def form_socket_key(host, port)
+      "#{host}:#{port}"
+    end
+
+    def split_socket_key(socket_key)
+      socket_key_arr = socket_key.split(':')
+      return socket_key_arr[0], socket_key_arr[1]
+    end
+
+    def create_socket(socket_key)
+      log.info "initializing tcp socket for #{socket_key}"
       begin
+        host, port = split_socket_key(socket_key)
         socket = TCPSocket.new(host, port)
-        log.debug "enabling ssl for socket #{host}:#{port}"
+        log.debug "enabling ssl for socket #{socket_key}"
         ssl = OpenSSL::SSL::SSLSocket.new(socket)
         # close tcp and ssl socket when either fails
         ssl.sync_close = true
         # initiate SSL/TLS handshake with server
         ssl.connect
       rescue => e
-        log.warn "failed to create tcp socket #{host}:#{port}: #{e}"
+        log.warn "failed to create tcp socket #{socket_key}: #{e}"
         ssl = nil
       end
       ssl
@@ -78,15 +96,16 @@ module Fluent
             record.dig('kubernetes', 'namespace_annotations', 'solarwinds_io/papertrail_port')
         host = record['kubernetes']['namespace_annotations']['solarwinds_io/papertrail_host']
         port = record['kubernetes']['namespace_annotations']['solarwinds_io/papertrail_port']
+      # else if it is a kubernetes log and we're discarding unannotated logs
+      elsif @discard_unannotated_pod_logs && record.dig('kubernetes')
+        host = DISCARD_STRING
+        port = DISCARD_STRING
       # else use pre-configured destination
       else
         host = @papertrail_host
         port = @papertrail_port
       end
-      socket_key = "#{host}:#{port}"
-      # recreate the socket if it's nil
-      @sockets[socket_key] ||= create_socket(host, port)
-      socket_key
+      form_socket_key(host, port)
     end
 
     def send_to_papertrail(packet, socket_key)
