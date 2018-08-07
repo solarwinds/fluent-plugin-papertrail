@@ -13,6 +13,7 @@ module Fluent
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
     config_param :flush_interval, :time, default: 1
     config_param :discard_unannotated_pod_logs, :bool, default: false
+    config_param :maximum_syslog_packet_size, :integer, default: 99990
 
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
@@ -115,7 +116,7 @@ module Fluent
       else
         begin
           # send it
-          @sockets[socket_key].puts packet.assemble
+          @sockets[socket_key].puts packet.assemble(max_size=@maximum_syslog_packet_size)
         rescue => e
           err_msg = "Error writing to #{socket_key}: #{e}"
           # socket failed, reset to nil to recreate for the next write
