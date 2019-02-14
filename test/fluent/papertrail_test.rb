@@ -144,5 +144,45 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
     @driver.instance.pick_socket(pod_annotation_record)
     @driver.instance.sockets[pod_socket_key] ||= @driver.instance.create_socket(pod_socket_key)
     assert true.eql? @driver.instance.sockets.key?(pod_socket_key)
+
+    nil_host = ''
+    nil_port = ''
+    nil_socket_key = "DISCARD:DISCARD"
+
+    nil_namespace_annotation_record = {
+        'hostname' => 'some_hostname',
+        'facility' => 'local0',
+        'severity' => 'warn',
+        'program' => 'some_program',
+        'message' => 'some_message',
+        'kubernetes' => {
+          'namespace_annotations' => {
+            'solarwinds_io/papertrail_host' => nil_host,
+            'solarwinds_io/papertrail_port' => nil_port
+          }
+        }
+    }
+
+    picked_socket_key = @driver.instance.pick_socket(nil_namespace_annotation_record)
+    # in this case @driver.instance.sockets is never actually configured, so we assert against picked name instead
+    assert picked_socket_key.eql? nil_socket_key
+
+    nil_pod_annotation_record = {
+        'hostname' => 'some_hostname',
+        'facility' => 'local0',
+        'severity' => 'warn',
+        'program' => 'some_program',
+        'message' => 'some_message',
+        'kubernetes' => {
+          'annotations' => {
+            'solarwinds_io/papertrail_host' => nil_host,
+            'solarwinds_io/papertrail_port' => nil_port
+          }
+        }
+    }
+
+    picked_socket_key = @driver.instance.pick_socket(nil_pod_annotation_record)
+    # in this case @driver.instance.sockets is never actually configured, so we assert against picked name instead
+    assert picked_socket_key.eql? nil_socket_key
   end
 end
