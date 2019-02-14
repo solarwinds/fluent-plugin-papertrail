@@ -106,7 +106,21 @@ module Fluent
         host = @papertrail_host
         port = @papertrail_port
       end
-      form_socket_key(host, port)
+      socket_key = form_socket_key(host, port)
+
+      if socket_key == ':'
+        kubernetes_err_msg = ''
+        if record.dig('kubernetes', 'namespace_name')
+          namespace_name = record['kubernetes']['namespace_name']
+          kubernetes_err_msg = " from Kubernetes namespace: \"#{namespace_name}\""
+        end
+        log.warn("Received nil socket_configuration#{kubernetes_err_msg}. Discarding message.")
+        host = DISCARD_STRING
+        port = DISCARD_STRING
+        socket_key = form_socket_key(host, port)
+      end
+
+      socket_key
     end
 
     def send_to_papertrail(packet, socket_key)
