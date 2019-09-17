@@ -45,8 +45,8 @@ module SyslogProtocol
       unless t && t.is_a?(String) && t.length > 0
         raise ArgumentError, "Tag must not be omitted"
       end
-      if t.length > 32
-        raise ArgumentError, "Tag must not be longer than 32 characters"
+      if t.length > 1024
+        raise ArgumentError, "Tag must not be longer than 1024 characters"
       end
       if t =~ /\s/
         raise ArgumentError, "Tag may not contain spaces"

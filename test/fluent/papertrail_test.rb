@@ -104,11 +104,9 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
       'severity' => 'warn',
       'message' => 'some_message'
     }
-    # too long for syslog APP-NAME
     some_tag = 'app-longname-2c5a0b0b-e808-4cf5-8a0b-cdf4a86da3b0'
     packet = @driver.instance.create_packet(some_tag, nil, record)
-    # assert long APP-NAME is truncated successfully
-    assert packet.tag.to_s.length < some_tag.length
+    assert packet.tag.to_s.eql? some_tag
   end
 
   def test_send_to_papertrail_with_test_socket
