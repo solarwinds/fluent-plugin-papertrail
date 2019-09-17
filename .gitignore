@@ -6,6 +6,7 @@
 /coverage/
 /doc/
 /pkg/
+/vendor/
 /spec/reports/
 /tmp/
 .ruby-version
