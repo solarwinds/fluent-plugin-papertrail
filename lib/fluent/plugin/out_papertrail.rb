@@ -81,7 +81,7 @@ module Fluent
       packet.facility = record['facility'] || 'local0'
       packet.severity = record['severity'] || 'info'
       packet.tag      = record['program'] || tag
-      packet.content  = record['message']
+      packet.content  = record['message'] || record['log']
       packet.time     = time ? Time.at(time) : Time.now
       packet
     end

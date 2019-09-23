@@ -97,6 +97,58 @@ class Fluent::PapertrailTest < Test::Unit::TestCase
     assert packet.tag.to_s.eql? some_tag
   end
 
+  def test_create_packet_with_message_and_log
+    log = 'log'
+    message = 'message'
+    record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program'  => 'pt',
+      'log' => log,
+      'message' => message
+    }
+    packet = @driver.instance.create_packet(nil, nil, record)
+    assert packet.content.to_s.eql? message
+  end
+
+  def test_create_packet_without_message
+    log = 'log'
+    record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program'  => 'pt',
+      'log' => log
+    }
+    packet = @driver.instance.create_packet(nil, nil, record)
+    assert packet.content.to_s.eql? log
+  end
+
+  def test_create_packet_without_message_and_log
+    log = 'log'
+    record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'program'  => 'pt'
+    }
+    packet = @driver.instance.create_packet(nil, nil, record)
+    assert packet.content.nil?
+  end
+
+  def test_create_packet_with_long_app_name
+    record = {
+      'hostname' => 'some_hostname',
+      'facility' => 'local0',
+      'severity' => 'warn',
+      'message' => 'some_message'
+    }
+    some_tag = 'app-longname-2c5a0b0b-e808-4cf5-8a0b-cdf4a86da3b0'
+    packet = @driver.instance.create_packet(some_tag, nil, record)
+    assert packet.tag.to_s.eql? some_tag
+  end
+
   def test_send_to_papertrail_with_test_socket
     snt_packet = @driver.instance.create_packet(nil, nil, @default_record)
     @driver.instance.send_to_papertrail(snt_packet, @socket_key)
