@@ -15,6 +15,13 @@ module Fluent
     config_param :discard_unannotated_pod_logs, :bool, default: false
     config_param :maximum_syslog_packet_size, :integer, default: 99990
 
+    # use TCP keep alive by default with some sensible configuration values as default
+    config_param :use_keep_alive, :bool, default: true
+    config_param :keep_alive_keep_idle, :integer, default: 300 # Seconds of idle time before sending a probe
+    config_param :keep_alive_keep_cnt, :integer, default: 3 # Number of probes to send before giving up
+    config_param :keep_alive_keep_interval, :integer, default: 300 # Seconds between each successful probe
+    config_param :tcp_user_timeout, :integer, default: 10000 # Milliseconds to wait for an unacknowledged packet before terminating the connection
+
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
 
@@ -61,6 +68,14 @@ module Fluent
       begin
         host, port = split_socket_key(socket_key)
         socket = TCPSocket.new(host, port)
+        if @use_keep_alive
+          log.debug "enabling tcp keep alive for socket #{socket_key}"
+          socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, 1) # Enable keepalive (1 is true)
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPIDLE, @keep_alive_keep_idle)
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPCNT, @keep_alive_keep_cnt)
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPINTVL, @keep_alive_keep_interval)
+          socket.setsockopt(Socket::IPPROTO_TCP , Socket::TCP_USER_TIMEOUT, @tcp_user_timeout)
+        end
         log.debug "enabling ssl for socket #{socket_key}"
         ssl = OpenSSL::SSL::SSLSocket.new(socket)
         # close tcp and ssl socket when either fails
