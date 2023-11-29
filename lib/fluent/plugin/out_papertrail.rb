@@ -4,6 +4,7 @@ module Fluent
   class Papertrail < Fluent::BufferedOutput
     class SocketFailureError < StandardError; end
     attr_accessor :sockets
+    attr_accessor :last_message_on_sockets
 
     # if left empty in fluent config these config_param's will error
     config_param :papertrail_host, :string
@@ -15,6 +16,16 @@ module Fluent
     config_param :discard_unannotated_pod_logs, :bool, default: false
     config_param :maximum_syslog_packet_size, :integer, default: 99990
 
+    # use TCP keep alive by default with some sensible configuration values as default
+    config_param :use_keep_alive, :bool, default: true
+    config_param :keep_alive_keep_idle, :integer, default: 300 # Seconds of idle time before sending a probe
+    config_param :keep_alive_keep_cnt, :integer, default: 3 # Number of probes to send before giving up
+    config_param :keep_alive_keep_interval, :integer, default: 300 # Seconds between each successful probe
+    config_param :tcp_user_timeout, :integer, default: 10000 # Milliseconds to wait for an unacknowledged packet before terminating the connection
+
+    # If socket has been quiet for this number of seconds then re-create it before sending new messages
+    config_param :socket_recreation_timeout, :integer, default: 1800 # Default to 30 minutes as papertrail itself has a 59 minute limit on this
+
     # register as 'papertrail' fluent plugin
     Fluent::Plugin.register_output('papertrail', self)
 
@@ -25,8 +36,10 @@ module Fluent
       super
       # create initial sockets hash and socket based on config param
       @sockets = {}
+      @last_message_on_sockets = {}
       socket_key = form_socket_key(@papertrail_host, @papertrail_port)
       @sockets[socket_key] = create_socket(socket_key)
+      @last_message_on_sockets[socket_key] = Time.now
       # redefine default hostname if it's been passed in through ENV
       @default_hostname = ENV['FLUENT_HOSTNAME'] || @default_hostname
     end
@@ -39,8 +52,10 @@ module Fluent
       chunk.msgpack_each {|(tag, time, record)|
         socket_key = pick_socket(record)
         unless socket_key.eql? form_socket_key(DISCARD_STRING, DISCARD_STRING)
-          # recreate the socket if it's nil
-          @sockets[socket_key] ||= create_socket(socket_key)
+          # if the socket is nil, if the last message entry is nil or the last message was more than `socket_recreation_timeout` ago then recreate socket
+          if !@sockets[socket_key] || !@last_message_on_sockets[socket_key] || @last_message_on_sockets[socket_key] + @socket_recreation_timeout < Time.now
+            @sockets[socket_key] = create_socket(socket_key)
+          end
           packet = create_packet(tag, time, record)
           send_to_papertrail(packet, socket_key)
         end
@@ -61,6 +76,14 @@ module Fluent
       begin
         host, port = split_socket_key(socket_key)
         socket = TCPSocket.new(host, port)
+        if @use_keep_alive
+          log.debug "enabling tcp keep alive for socket #{socket_key}"
+          socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, 1) # Enable keepalive (1 is true)
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPIDLE, @keep_alive_keep_idle)
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPCNT, @keep_alive_keep_cnt)
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPINTVL, @keep_alive_keep_interval)
+          socket.setsockopt(Socket::IPPROTO_TCP , Socket::TCP_USER_TIMEOUT, @tcp_user_timeout)
+        end
         log.debug "enabling ssl for socket #{socket_key}"
         ssl = OpenSSL::SSL::SSLSocket.new(socket)
         # close tcp and ssl socket when either fails
@@ -131,10 +154,12 @@ module Fluent
         begin
           # send it
           @sockets[socket_key].puts packet.assemble(max_size=@maximum_syslog_packet_size)
+          @last_message_on_sockets[socket_key] = Time.now
         rescue => e
           err_msg = "Error writing to #{socket_key}: #{e}"
           # socket failed, reset to nil to recreate for the next write
           @sockets[socket_key] = nil
+          @last_message_on_sockets[socket_key] = nil
           raise SocketFailureError, err_msg, e.backtrace
         end
       end

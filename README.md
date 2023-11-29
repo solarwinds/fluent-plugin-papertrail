@@ -81,6 +81,15 @@ If you want to change any of these parameters simply add them to a match stanza.
 </match>
 ```
 
+### Advanced idle time configuration
+Papertrail can sometimes kill idle connections. This plugin is built to try and avoid the standard re-connection scenarios and has sensible defaults to reduce the number of failed messages which will be sent. You can configure this behaviour with the following settings:
+ - Using TCP keep-alive `use_keep_alive`. This means that the TCP sockets created will try to use TCP keep-alives if the socket is idle for a period of time. Default true. There are configurable settings to tune this behaviour:
+   - Keep idle time `keep_alive_keep_idle`. This value in seconds is passed directly to the `TCP_KEEPIDLE` socket option, which is the amount of idle time on a socket before sending a keep alive probe. Default 300s
+   - Keep alive count `keep_alive_keep_cnt`. This value is passed directly to the `TCP_KEEPCNT` socket option, which is the number of keep alive probes tried before the TCP socket is marked as disconnected. Default 3
+   - Keep alive interval `keep_alive_keep_interval`. This value in seconds is passed directly the `TCP_KEEPINTVL` socket option, which is the time between each successful keep alive probe. Default 300s
+   - TCP user timeout `tcp_user_timeout`. This value in **milliseconds** is passed directly to the `TCP_USER_TIMEOUT` socket option, which is the amount of time to wait for an unacknowledged packet before terminating the connection. Default 10,000ms
+- Controlling the socket re-creation timeout `socket_recreation_timeout`. If a socket sees no log messages for this period of time (in seconds), then it is re-created before trying to send any new messages. Default 1800 seconds (30 minutes), Papertrail will kill any connections which haven't sent application data in the last 59 minutes
+
 ## Kubernetes Annotations
 
 If you're running this plugin in Kubernetes with the kubernetes_metadata_filter plugin enabled you can redirect logs to alternate Papertrail destinations by adding annotations to your Pods or Namespaces:
